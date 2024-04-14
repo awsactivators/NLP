@@ -19,6 +19,7 @@ translator_to_english = pipeline(
 
 MAX_FILE_SIZE = 10000000
 
+
 class TextExtractor:
     def __init__(self, doc_location: str):
         if doc_location is None:
@@ -51,7 +52,7 @@ class TextExtractor:
         with open(self.doc_location, "r", encoding="utf-8") as file:
             text = file.read()
         return text
-    
+
     def text_length(self):
         words = self.text.split()
         num_words = len(words)
@@ -76,8 +77,6 @@ class TextExtractor:
         return self.text
 
 
-
-
 def summarize(doc: str, target_language: str) -> str:
     text_extractor = TextExtractor(doc)
     text = text_extractor.get_text()
@@ -86,11 +85,20 @@ def summarize(doc: str, target_language: str) -> str:
     summary_length = int(text_length / 2)
 
     try:
-        summary = summarizer(text, max_length=summary_length, do_sample=False)[0]["summary_text"]
+        summary = summarizer(text, max_length=summary_length, do_sample=False)[0][
+            "summary_text"
+        ]
     except Exception as ex:
         max_length = tokenizer.model_max_length
-        inputs = tokenizer(text, truncation=True, max_length=max_length, return_tensors="pt")
-        summary_ids = model.generate(inputs["input_ids"], num_beams=4, max_length=summary_length, early_stopping=True)
+        inputs = tokenizer(
+            text, truncation=True, max_length=max_length, return_tensors="pt"
+        )
+        summary_ids = model.generate(
+            inputs["input_ids"],
+            num_beams=4,
+            max_length=summary_length,
+            early_stopping=True,
+        )
         summary = tokenizer.decode(summary_ids[0], skip_special_tokens=True)
 
     detected_lang = detect(summary)
