@@ -3,3 +3,7 @@ torch
 torchvision 
 torchaudio
 pypdf
+python-docx
+langdetect 
+sentencepiece 
+sacremoses
