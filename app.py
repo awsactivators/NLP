@@ -1,11 +1,15 @@
 import gradio as gr
-from transformers import pipeline
+from transformers import AutoTokenizer, AutoModelForSeq2SeqLM, pipeline
 from pypdf import PdfReader
 import docx
 import os
 from langdetect import detect
 
 summarizer = pipeline(task="summarization", model="facebook/bart-large-cnn")
+
+tokenizer = AutoTokenizer.from_pretrained("facebook/bart-large-cnn")
+model = AutoModelForSeq2SeqLM.from_pretrained("facebook/bart-large-cnn")
+
 translator_to_french = pipeline(
     task="translation_en_to_fr", model="Helsinki-NLP/opus-mt-en-fr"
 )
@@ -81,7 +85,14 @@ def summarize(doc: str, target_language: str) -> str:
     text_length = text_extractor.text_length()
     summary_length = int(text_length / 2)
 
-    summary = summarizer(text, max_length=summary_length, do_sample=False)[0]["summary_text"]
+    try:
+        summary = summarizer(text, max_length=summary_length, do_sample=False)[0]["summary_text"]
+    except Exception as ex:
+        max_length = tokenizer.model_max_length
+        inputs = tokenizer(text, truncation=True, max_length=max_length, return_tensors="pt")
+        summary_ids = model.generate(inputs["input_ids"], num_beams=4, max_length=summary_length, early_stopping=True)
+        summary = tokenizer.decode(summary_ids[0], skip_special_tokens=True)
+
     detected_lang = detect(summary)
 
     if target_language is None:
