@@ -20,9 +20,6 @@ def summarize(doc: str, target_language: str) -> str:
     text, word_count = text_extractor.get_text()
     summary_length = int(word_count / 2)
 
-    text_length = text_extractor.text_length()
-    summary_length = int(text_length / 2)
-
     try:
         summary = summarizer(text, max_length=summary_length, do_sample=False)[0][
             "summary_text"
@@ -32,6 +29,7 @@ def summarize(doc: str, target_language: str) -> str:
         inputs = tokenizer(
             text, truncation=True, max_length=max_length, return_tensors="pt"
         )
+
         summary_ids = model.generate(
             inputs["input_ids"],
             num_beams=4,
